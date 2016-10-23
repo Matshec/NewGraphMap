@@ -1,4 +1,4 @@
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 import java.lang.Math;
 
@@ -70,7 +70,7 @@ public class GraphMap {
 
                     }
 
-
+                        //sprawdzenie czy dane skrzyżowanie już przypadkiem nie istnieje
                     if (tempCross.streetsCrossing.size() > 1) {
                         boolean bSameCrosspoint = false;
                         for (int q = 0; q < crossRoads.size(); q++) {
@@ -84,6 +84,19 @@ public class GraphMap {
 
         }
 
+    public void writeToFile(FileWriter o) throws IOException {
+        for (int i = 0; i < crossRoads.size(); i++) {
+            o.write("lat: " + crossRoads.get(i).crossPoint.lat + " ");
+            o.write("lon: " + crossRoads.get(i).crossPoint.lon + " \n");
+            o.write("node ID: " + crossRoads.get(i).crossPoint.id + "\n");
+
+            for (int j = 0; j < crossRoads.get(i).streetsCrossing.size() ; j++) {
+                o.write(crossRoads.get(i).streetsCrossing.get(j).name + "\n");
+            }
+
+            o.write("------------------------------------------------------------------------------------- \n");
+        }
+    }
 
 
 
@@ -104,14 +117,19 @@ public class GraphMap {
             Mygraph.calculateLenghtofWay();
             Mygraph.findCrossings();
 
+            //pisanie do pliku
+            FileWriter output = new FileWriter("Graph.txt");
+            Mygraph.writeToFile(output);
+            output.close();
+
         }catch (Exception e){
             e.printStackTrace();
         }
         System.out.println(edge.size());
-        // System.out.println(edge.get(edge.size()-1).nodeIds.get(0));
-        // System.out.println(edge.get(4).nodeIds.get(0);
-        //System.out.println(edge.get(0).nodes.get(2).id);
-
+        for (int a = 0; a < edge.size() ; a++) {
+            System.out.println(edge.get(a).name);
+        }
+            System.out.println("!!!!!!!!!!!!!!11");
         for (int i = 0; i < Mygraph.crossRoads.size() ; i++) {
             for (int j = 0; j < Mygraph.crossRoads.get(i).streetsCrossing.size(); j++) {
                 System.out.println(Mygraph.crossRoads.get(i).streetsCrossing.get(j).name);
@@ -135,10 +153,9 @@ class UserHandler extends DefaultHandler {
     private boolean bNode = false;
     private boolean bHighway = false;
     private int crossroadsIndex;
-    private Way tempWay;
     private String tempWayID;
     private ArrayList<String> tempRefs;
-    private  String tempName;
+    private  String tempName = null;
 
 
 
@@ -183,23 +200,6 @@ class UserHandler extends DefaultHandler {
 
 
 
-        //Realtnion jest niepotrzeban, inny sposób na znajdowanie skryżowań
-
-        //znajduje relation, skrzyżowanie
-//        else if(qName.equalsIgnoreCase("relation") && GraphMap.parseCount == 0){
-//            bRel = true;
-//            GraphMap.crossroads.add(new Crossing());
-//            //i - indeks ostatniego elementu
-//            crossroadsIndex = GraphMap.crossroads.size();
-//        }
-//        //znajduje "ref" w <relatoin>
-//        if(bRel == true && qName.equalsIgnoreCase("member") && attributes.getValue("type").equalsIgnoreCase("way") &&
-//                GraphMap.parseCount==0){
-//            //odwołujemu sie do ostatniego ibiektu w liście crossroads, następinie dodajemy do listy Refs
-//            //znajdującej się w tym obiekcie nowy wpis odczytany z pliku .xml
-//           GraphMap.crossroads.get(crossroadsIndex-1).refs.add(attributes.getValue("ref"));
-//        }
-
         //znajduje node
         else if(qName.equalsIgnoreCase("node") && GraphMap.parseCount==1){
             Node tempNode = new Node(attributes.getValue("lat"),attributes.getValue("lon"),attributes.getValue("id"));
@@ -228,23 +228,28 @@ class UserHandler extends DefaultHandler {
      */
     @Override
     public void endElement(String uri, String localName, String qName){
+
         if((qName.equalsIgnoreCase("way") && GraphMap.parseCount==0)){
             //tworzenie obiektów way
             if(bHighway == true ) {
-                GraphMap.edge.add(new Way(tempWayID,tempName));
-                int a = GraphMap.edge.size();
-                GraphMap.edge.get(a-1).nodeIds = tempRefs;
-                tempRefs = null; //na wszelki wypadek
+                if (tempName == null){
+                    GraphMap.edge.add(new Way(tempWayID));
+                    int a = GraphMap.edge.size();
+                    GraphMap.edge.get(a-1).nodeIds = tempRefs;
+                    tempRefs = null; //na wszelki wypadek
+
+                }else {
+                    GraphMap.edge.add(new Way(tempWayID, tempName));
+                    int a = GraphMap.edge.size();
+                    GraphMap.edge.get(a - 1).nodeIds = tempRefs;
+                    tempRefs = null; //na wszelki wypadek
+                }
             }
             bWay = false;
             bHighway = false;
         }
 
-        else if(qName.equalsIgnoreCase("relation")){
-            bRel = false;
-        }
-        else if(qName.equalsIgnoreCase("node")){
-        }
+
     }
 
 }
@@ -258,7 +263,7 @@ class Way{
     /**
      * Nazwa ulicy
      */
-    public String name = "no name";
+    public String name;
     // długość ulicy, drogi wyliczona z danych GPS
     /**
      * Długość ulicy, drogi
@@ -284,10 +289,12 @@ class Way{
     public Way(String ID, String _name){
         id = ID;
         if(_name != null) this.name = _name;
+        else{name = "no name"; }
 
     }
     public Way(String ID){
         id = ID;
+        name = " no name";
     }
 
     /**
