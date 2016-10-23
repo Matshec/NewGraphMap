@@ -125,7 +125,7 @@ public class GraphMap {
         }catch (Exception e){
             e.printStackTrace();
         }
-        System.out.println(edge.size());
+        
         for (int a = 0; a < edge.size() ; a++) {
             System.out.println(edge.get(a).name);
         }
