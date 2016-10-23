@@ -2,9 +2,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.lang.Math;
 
-import com.sun.xml.internal.bind.v2.TODO;
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader;
-import com.sun.xml.internal.fastinfoset.util.StringIntMap;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -22,12 +20,14 @@ import javax.xml.parsers.SAXParserFactory;
  */
 
 public class GraphMap {
-    public static ArrayList<Crossing> crossroads;
+    public  ArrayList<Crossing> crossRoads;
     public static int parseCount = 0;
     public static ArrayList<Way> edge;
 
+
+
     GraphMap(){
-        crossroads = new ArrayList<Crossing>();
+        crossRoads = new ArrayList<Crossing>();
         edge = new ArrayList<Way>();
     }
 
@@ -51,6 +51,43 @@ public class GraphMap {
         }
     }
 
+    /**
+     * Znajduje skrzyżowania i tworzy odpowiedające im obiekty
+     */
+    public void findCrossings(){
+        Crossing tempCross;
+        for (int i = 0; i <  edge.size(); i++) {
+            tempCross = new Crossing();
+            tempCross.streetsCrossing.add(edge.get(i));
+            for (int j = 0; j < edge.get(i).nodes.length; j++) {
+                for (int k = i + 1; k < edge.size(); k++) {
+                    for (int l = 0; l < edge.get(k).nodes.length; l++) {
+                        //celowe porównanie referencji
+                        if (edge.get(i).nodes[j] == edge.get(k).nodes[l]) {
+                            tempCross.streetsCrossing.add(edge.get(k));
+                            tempCross.crossPoint = edge.get(k).nodes[l];
+                        }
+
+                    }
+
+
+                    if (tempCross.streetsCrossing.size() > 1) {
+                        boolean bSameCrosspoint = false;
+                        for (int q = 0; q < crossRoads.size(); q++) {
+                            if (crossRoads.get(q).crossPoint == tempCross.crossPoint) bSameCrosspoint = true;
+                        }
+                        if (bSameCrosspoint == false) crossRoads.add(tempCross);
+                    }
+                 }
+                }
+            }
+
+        }
+
+
+
+
+
 
     public static void main(String[] args) {
         GraphMap Mygraph = new GraphMap();
@@ -65,6 +102,7 @@ public class GraphMap {
             Mygraph.createNodeArrays();
             saxParser.parse(xmlfile,userHandler);
             Mygraph.calculateLenghtofWay();
+            Mygraph.findCrossings();
 
         }catch (Exception e){
             e.printStackTrace();
@@ -74,13 +112,11 @@ public class GraphMap {
         // System.out.println(edge.get(4).nodeIds.get(0);
         //System.out.println(edge.get(0).nodes.get(2).id);
 
-        for (int i = 0; i < edge.size(); i++) {
-            System.out.println("Id: "+edge.get(i).id);
-            System.out.println("NAme: "+edge.get(i).name);
-            for (int j = 0; j < edge.get(i).nodes.length; j++) {
-
+        for (int i = 0; i < Mygraph.crossRoads.size() ; i++) {
+            for (int j = 0; j < Mygraph.crossRoads.get(i).streetsCrossing.size(); j++) {
+                System.out.println(Mygraph.crossRoads.get(i).streetsCrossing.get(j).name);
             }
-            System.out.println("dłg " + edge.get(i).length);
+            System.out.println(Mygraph.crossRoads.get(i).crossPoint.id);
             System.out.println("--------");
         }
     }
@@ -301,10 +337,12 @@ class Crossing {
      * lista referencji do opbiektów Way, dane o tym jakie droigi krzyżują się w tym miejscu
      */
 
-    public ArrayList<Way> streetsCrossing;
+    public ArrayList<Way> streetsCrossing = new ArrayList<Way>();
 
 
     public Node crossPoint;
+
+
 
 }
 
