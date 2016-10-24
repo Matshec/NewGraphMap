@@ -102,11 +102,9 @@ public class GraphMap {
 
             for (int j = 0; j < crossRoads.get(i).streetsCrossing.size() ; j++) {
                 o.write(crossRoads.get(i).streetsCrossing.get(j).name + "  ");
-                o.write("Way ID: " + crossRoads.get(i).streetsCrossing.get(j).id + "| ");
-                for (int k = 0; k <crossRoads.get(i).streetsCrossing.get(j).nodes.length ; k++) {
-                     o.write(crossRoads.get(i).streetsCrossing.get(j).nodes[k].id + ", ");
-                }
-                o.write("\n");
+                o.write("lenght: " +String.format("%.2f",crossRoads.get(i).streetsCrossing.get(j).length) +  "km  ");
+                o.write("Way ID: " + crossRoads.get(i).streetsCrossing.get(j).id + "\n");
+
             }
 
             o.write("------------------------------------------------------------------------------------- \n");
@@ -145,7 +143,7 @@ public class GraphMap {
             Mygraph.calculateLenghtofWay();
              System.out.println("finding Crossings");
             Mygraph.findCrossings();
-            System.out.println( "Writing to File: Graph.txt");
+            System.out.println( "Writing to file: Graph.txt");
             //pisanie do pliku
             FileWriter output = new FileWriter("Graph.txt");
             Mygraph.writeToFile(output);
